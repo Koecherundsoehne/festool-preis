@@ -2,16 +2,21 @@ name: Preise automatisch erfassen
 
 on:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '0 * * * *'  # stündlich
   workflow_dispatch:
 
 jobs:
   update-preise:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write  # <- NEU! Erlaubt das Schreiben ins Repo
+
     steps:
       - name: Code holen
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}  # <- Damit darf gepusht werden
 
       - name: Python einrichten
         uses: actions/setup-python@v4
@@ -21,14 +26,12 @@ jobs:
       - name: Abhängigkeiten installieren
         run: |
           pip install requests beautifulsoup4
-          python --version
-          pip list
 
-      - name: Preis-Skript ausführen
+      - name: Preise abrufen und CSV aktualisieren
         run: |
           python update_preise.py
 
-      - name: Historie commiten
+      - name: Änderungen committen und pushen
         run: |
           git config user.name "PreisBot"
           git config user.email "preisbot@users.noreply.github.com"
