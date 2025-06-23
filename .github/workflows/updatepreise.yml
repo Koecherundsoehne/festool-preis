@@ -2,7 +2,7 @@ name: Preise automatisch erfassen
 
 on:
   schedule:
-    - cron: '0 * * * *'  # stündlich
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -10,31 +10,26 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: write  # <- NEU! Erlaubt das Schreiben ins Repo
+      contents: write
 
     steps:
       - name: Code holen
         uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}  # <- Damit darf gepusht werden
 
-      - name: Python einrichten
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Abhängigkeiten installieren
+      - name: Chrome + Python + Selenium einrichten
         run: |
-          pip install requests beautifulsoup4
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser
+          python -m pip install --upgrade pip
+          pip install selenium
 
-      - name: Preise abrufen und CSV aktualisieren
-        run: |
-          python update_preise.py
+      - name: Preise mit Selenium abrufen
+        run: python update_preise.py
 
       - name: Änderungen committen und pushen
         run: |
           git config user.name "PreisBot"
           git config user.email "preisbot@users.noreply.github.com"
           git add historie.csv
-          git commit -m "Automatische Preisaktualisierung" || echo "Keine Änderungen"
+          git commit -m "Preisupdate automatisch mit Selenium" || echo "Keine Änderungen"
           git push
