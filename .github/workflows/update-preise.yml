@@ -1,32 +1,37 @@
-name: Preisverlauf automatisch aktualisieren
+name: Preise automatisch erfassen
 
 on:
   schedule:
-    - cron: '0 * * * *'  # jede Stunde
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:
-  update:
+  update-preise:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Repository klonen
+      - name: Code holen
         uses: actions/checkout@v3
 
-      - name: Python installieren
+      - name: Python einrichten
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: Benötigte Pakete installieren und Skript ausführen
+      - name: Abhängigkeiten installieren
         run: |
           pip install requests beautifulsoup4
+          python --version
+          pip list
+
+      - name: Preis-Skript ausführen
+        run: |
           python update_preise.py
 
-      - name: Änderungen committen
+      - name: Historie commiten
         run: |
           git config user.name "PreisBot"
-          git config user.email "bot@preis.update"
+          git config user.email "preisbot@users.noreply.github.com"
           git add historie.csv
-          git commit -m "Preisverlauf aktualisiert" || echo "Keine Änderungen"
+          git commit -m "Automatische Preisaktualisierung" || echo "Keine Änderungen"
           git push
