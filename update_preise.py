@@ -39,5 +39,24 @@ for url in urls:
         driver.get(url)
         time.sleep(3)  # Warten, bis Seite geladen ist
 
-        # Preis finden – HTML-Analyse: Preise stehen in div.verkaufspreis
-        preis_element = driver.find_
+        # Preis finden – klassischer CSS-Klassenname
+        preis_element = driver.find_element(By.CLASS_NAME, "verkaufspreis")
+        preis = preis_element.text.strip()
+
+        # Produktname aus URL
+        produkt = urlparse(url).path.split("/")[-1].replace("_", " ")
+        jetzt = datetime.now()
+        datum = jetzt.strftime("%d.%m.%Y")
+        uhrzeit = jetzt.strftime("%H:%M")
+
+        # In CSV schreiben
+        with open(csv_datei, "a", encoding="utf-8", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow([datum, uhrzeit, produkt, preis])
+
+        print(f"✔ {produkt}: {preis} ({datum} {uhrzeit})")
+
+    except Exception as e:
+        print(f"⚠ Fehler bei {url}: {e}")
+
+driver.quit()
