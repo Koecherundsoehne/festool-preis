@@ -1,9 +1,11 @@
-import requests
-from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
 from datetime import datetime
-import csv
-import os
 from urllib.parse import urlparse
+import time
+import os
+import csv
 
 # === Produkt-URLs ===
 urls = [
@@ -17,43 +19,25 @@ urls = [
 csv_datei = "historie.csv"
 csv_kopfzeile = ["Datum", "Uhrzeit", "Produkt", "Preis (€)"]
 
-# === CSV initialisieren ===
+# === Chrome-Setup (Headless für GitHub)
+chrome_options = Options()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+
+driver = webdriver.Chrome(options=chrome_options)
+
+# === CSV initialisieren (falls nötig)
 if not os.path.isfile(csv_datei):
     with open(csv_datei, "w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(csv_kopfzeile)
-    print("✔ CSV-Datei erstellt mit Kopfzeile")
 
-# === Schleife über Produkte ===
+# === Verarbeitung der URLs
 for url in urls:
     try:
-        response = requests.get(url, timeout=15)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, "html.parser")
+        driver.get(url)
+        time.sleep(3)  # Warten, bis Seite geladen ist
 
-        # Preis finden – robust durch mehrere Selektoren
-        preis = "nicht gefunden"
-        mögliche_selector = [".price", ".value", "strong", "b", ".article-price"]
-        for sel in mögliche_selector:
-            el = soup.select_one(sel)
-            if el and "€" in el.text:
-                preis = el.text.strip()
-                break
-
-        # Produktname aus URL ableiten
-        produkt = urlparse(url).path.split("/")[-1].replace("_", " ")
-
-        # Zeitstempel
-        jetzt = datetime.now()
-        datum = jetzt.strftime("%d.%m.%Y")
-        uhrzeit = jetzt.strftime("%H:%M")
-
-        # In CSV schreiben
-        with open(csv_datei, "a", encoding="utf-8", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow([datum, uhrzeit, produkt, preis])
-
-        print(f"➕ {produkt}: {preis} ({datum} {uhrzeit})")
-
-    except Exception as e:
-        print(f"⚠ Fehler bei {url}: {e}")
+        # Preis finden – HTML-Analyse: Preise stehen in div.verkaufspreis
+        preis_element = driver.find_
