@@ -1,0 +1,32 @@
+name: Festool-Preis automatisch aktualisieren
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # jede volle Stunde
+  workflow_dispatch:      # manuell auslösbar
+
+jobs:
+  update-preis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repository klonen
+        uses: actions/checkout@v3
+
+      - name: Python installieren
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Preis extrahieren und Datei schreiben
+        run: |
+          pip install requests beautifulsoup4
+          python update_preis.py
+
+      - name: Änderungen committen
+        run: |
+          git config user.name "PreisBot"
+          git config user.email "bot@preis.updater"
+          git add preis.txt
+          git commit -m "Preis automatisch aktualisiert" || echo "Nichts zu committen"
+          git push
