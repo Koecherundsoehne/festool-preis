@@ -38,25 +38,20 @@ with open("preise_aktuell.csv", mode="w", newline="") as file:
             driver.get(url)
             wait = WebDriverWait(driver, 20)
 
-            try:
-                preis_element = wait.until(EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, ".artikelbox-preis__gesamt p")
-                ))
-            except TimeoutException:
-                # Versuche alternativen Selector
-                preis_element = wait.until(EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, ".artikelbox-preis__gesamt div")
-                ))
+            box = wait.until(EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "div.artikelbox-preis__gesamt")
+            ))
 
-            preis = preis_element.text.strip()
+            p_tag = box.find_element(By.TAG_NAME, "p")
+            preis = p_tag.text.strip()
             print(f"✅ Preis gefunden: {preis}")
 
         except TimeoutException:
             preis = "Timeout beim Preis finden"
-            print(f"❌ Timeout: Preis nicht gefunden bei {url}")
+            print(f"❌ Timeout bei {url}")
         except NoSuchElementException:
-            preis = "Kein Preiselement"
-            print(f"❌ Kein Preiselement auf Seite {url}")
+            preis = "Preis nicht gefunden"
+            print(f"❌ Kein Preiselement bei {url}")
         except Exception as e:
             preis = f"Fehler: {str(e)}"
             print(f"❌ Allgemeiner Fehler: {e}")
