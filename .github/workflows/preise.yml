@@ -1,0 +1,43 @@
+name: Preise aktualisieren
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # stündlich
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Repository klonen
+      uses: actions/checkout@v3
+
+    - name: Python einrichten
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Abhängigkeiten installieren
+      run: |
+        pip install selenium
+
+    - name: Chrome + Treiber installieren
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y chromium-browser
+        wget https://storage.googleapis.com/chrome-for-testing-public/122.0.6261.94/linux64/chromedriver-linux64.zip
+        unzip chromedriver-linux64.zip
+        sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
+        sudo chmod +x /usr/local/bin/chromedriver
+
+    - name: Preise aktualisieren
+      run: python preise_aktuell.py
+
+    - name: Datei committen
+      run: |
+        git config --global user.name "github-actions"
+        git config --global user.email "actions@github.com"
+        git add preise_aktuell.csv
+        git commit -m "⏰ Preisupdate"
+        git push
