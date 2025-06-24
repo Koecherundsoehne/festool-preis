@@ -42,4 +42,18 @@ for url in urls:
             By.XPATH, '//td[contains(text(), "Gesamtsumme")]/following-sibling::td'
         )))
 
-        preis = preis_element.text.stri_
+        preis = preis_element.text.strip()
+        daten.append([datum, produkt, preis])
+        print(f"{produkt}: {preis}")
+
+    except TimeoutException:
+        print(f"❌ Preis nicht gefunden: {url}")
+        daten.append([datum, produkt, "Fehler"])
+
+driver.quit()
+
+# Speichern in CSV
+with open("preise_aktuell.csv", mode="w", newline="", encoding="utf-8") as f:
+    writer = csv.writer(f)
+    writer.writerow(["Datum", "Produkt", "Preis"])
+    writer.writerows(daten)
